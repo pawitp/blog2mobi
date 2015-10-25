@@ -80,7 +80,7 @@ class WebToMobi
     page = Nokogiri::HTML(open(url))
 
     # Extract title
-    title = page.css('.entry-title, .post-title').text
+    title = page.css('.entry-title, .post-title').text.strip
     @toc.push([outfile, title])
 
     # Prefill book title from page title
