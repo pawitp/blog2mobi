@@ -21,10 +21,12 @@ end
 
 def get_urls
   if not ARGV[0]
-    abort("Usage: blog2mobi.rb urls.txt")
+    print "Enter URL: "
+    content = gets.strip
+  else
+    content = open(ARGV[0]).read
   end
-  
-  content = open(ARGV[0]).read
+
   if content.include?("<a ")
     # HTML dump
     return content.scan(/href="(.*)"/).map { |a| a[0] }
