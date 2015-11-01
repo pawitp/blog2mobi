@@ -98,8 +98,9 @@ class WebToMobi
 
     # Rewrite image URLs
     body.css('img').each do |img|
-      # TODO: need to support relative URL
-      img_url = img['src']
+      # URI.join will correctly handle both relative and absolute URLs
+      img_url = URI.join(url, img['src']).to_s
+
       ext = URI.parse(img_url).path.split(".")[-1]
       
       local_src = "#{@counter.get_next}.#{ext}"
