@@ -29,7 +29,7 @@ def get_urls
 
   if content.include?("<a ")
     # HTML dump
-    return content.scan(/href="(.*)"/).map { |a| a[0] }
+    return content.scan(/href="(.*?)"/).map { |a| a[0] }
   else
     # Plain URL list
     return content.split("\n")
