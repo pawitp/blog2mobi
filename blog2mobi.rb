@@ -96,6 +96,9 @@ class WebToMobi
     # Extract body
     body = page.css('.entry-content, .post-body')
 
+    # Get rid of "share this" box
+    body.css('.sharedaddy, #comments').remove
+
     # Rewrite image URLs
     body.css('img').each do |img|
       # URI.join will correctly handle both relative and absolute URLs
@@ -107,9 +110,6 @@ class WebToMobi
       @images.push([local_src, img_url])
       img['src'] = local_src
     end
-
-    # Get rid of "share this" box
-    body.css('.sharedaddy').remove
 
     File.open("#{@tmp}/#{outfile}", "w") do |of|
       of.puts "<html><body>"
