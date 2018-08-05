@@ -15,7 +15,7 @@ def ask_input(type, existing)
   if input != ""
     existing = input
   end
-  
+
   return existing
 end
 
@@ -40,7 +40,7 @@ class Counter
   def initialize
     @counter = 0
   end
-  
+
   def get_next
     @counter += 1
     return @counter
@@ -54,7 +54,7 @@ class WebToMobi
     @images = []
     @tmp = tmp
     @urls = urls
-  
+
     @book_title = ""
     @book_author = ""
   end
@@ -70,13 +70,13 @@ class WebToMobi
 
     call_calibre_convert("#{@tmp}/toc.html", "#{@book_title}.mobi")
   end
-  
+
   def download_pages
     @urls.each do |url|
       download_page(url)
     end
   end
-  
+
   def get_first(page, selectors)
     selectors.split(',').each do |s|
       elem = page.at_css(s.strip)
@@ -117,7 +117,7 @@ class WebToMobi
       img_url = URI.join(url, img['src']).to_s
       # HACK: Calibre will figure it out
       ext = "jpg"
-      
+
       local_src = "#{@counter.get_next}.#{ext}"
       @images.push([local_src, img_url])
       img['src'] = local_src
@@ -135,7 +135,7 @@ class WebToMobi
       of.puts "</body></html>"
     end
   end
-  
+
   def download_images
     @images.each do |local_src, url|
       begin
@@ -157,7 +157,7 @@ class WebToMobi
   def write_toc
     File.open("#{@tmp}/toc.html", "w") do |f|
       f.puts "<html><head><title>#{@book_title}</title><meta name=\"author\" content=\"#{@book_author}\"></head><body>"
-      
+
       # We don't want to output this, it's just an index for Calibre to work on
       # Calibre will generate another ToC for us anyway
       f.puts "<div style=\"display:none\">"
