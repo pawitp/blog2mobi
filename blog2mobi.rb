@@ -60,6 +60,8 @@ class WebToMobi
   end
 
   def process
+    puts "Using #{@tmp} as temporary directory"
+
     download_pages()
     download_images()
 
@@ -75,6 +77,15 @@ class WebToMobi
     end
   end
   
+  def get_first(page, selectors)
+    selectors.split(',').each do |s|
+      elem = page.at_css(s.strip)
+      if elem
+        return elem
+      end
+    end
+  end
+
   def download_page(url)
     outfile = "#{@counter.get_next}.html"
     puts "Downloading " + url + " as " + outfile
@@ -82,8 +93,9 @@ class WebToMobi
     page = Nokogiri::HTML(open(url))
 
     # Extract title
-    title = page.css('.entry-title, .post-title').text.strip
+    title = get_first(page, '.entry-title, .post-title, title').text.strip
     @toc.push([outfile, title])
+    puts "Title: " + title
 
     # Prefill book title from page title
     if @book_title == ""
@@ -94,7 +106,7 @@ class WebToMobi
     end
 
     # Extract body
-    body = page.css('.entry-content, .post-body')
+    body = get_first(page, '.entry-content, .post-body')
 
     # Get rid of "share this" box
     body.css('.sharedaddy, #comments').remove
@@ -103,8 +115,8 @@ class WebToMobi
     body.css('img').each do |img|
       # URI.join will correctly handle both relative and absolute URLs
       img_url = URI.join(url, img['src']).to_s
-
-      ext = URI.parse(img_url).path.split(".")[-1]
+      # HACK: Calibre will figure it out
+      ext = "jpg"
       
       local_src = "#{@counter.get_next}.#{ext}"
       @images.push([local_src, img_url])
@@ -113,7 +125,12 @@ class WebToMobi
 
     File.open("#{@tmp}/#{outfile}", "w") do |of|
       of.puts "<html><body>"
-      of.puts "<h1>" + title + "</h1>"
+      if body.css('h1,h2').to_s.strip.empty?
+        puts "Inserting title"
+        of.puts "<h1>" + title + "</h1>"
+      else
+        puts "Inline Title: #{body.css('h1,h2,h3').to_s.strip}"
+      end
       of.puts body.to_s
       of.puts "</body></html>"
     end
@@ -121,8 +138,14 @@ class WebToMobi
   
   def download_images
     @images.each do |local_src, url|
-      puts "Downloading image " + url + " as " + local_src
-      File.write("#{@tmp}/#{local_src}", open(url).read)
+      begin
+        puts "Downloading image " + url + " as " + local_src
+        File.write("#{@tmp}/#{local_src}", open(url).read)
+      rescue OpenURI::HTTPError
+        puts "Unable to download " + url
+      rescue RuntimeError
+        puts "Unable to download " + url
+      end
     end
   end
 
@@ -146,7 +169,8 @@ class WebToMobi
   end
 
   def call_calibre_convert(input, output)
-    system("\"#{CALIBRE_CONVERT}\" \"#{input}\" \"#{output}\"")
+    output.gsub!(":", " ") # Hack to make filename more friendly
+    system("\"#{CALIBRE_CONVERT}\" \"#{input}\" \"#{output}\" --filter-css font-family,color,margin-left,margin-right")
   end
 end
 
